@@ -29,26 +29,91 @@ ChartJS.register(
 
 const ProgressChart: React.FC = () => {
   const { goals, scoreHistory } = useGoals();
-  
-  // Prepare data for line chart - last 7 entries
+  const chartRef = React.useRef<ChartJS<'line'>>(null);
+
+  // Calculate cumulative scores
+  const cumulativeScores = React.useMemo(() => {
+    return scoreHistory.reduce((acc, entry, index) => {
+      const previousTotal = index > 0 ? acc[index - 1] : 0;
+      acc.push(previousTotal + entry.score);
+      return acc;
+    }, [] as number[]);
+  }, [scoreHistory]);
+
+  // Get last 7 entries (or all if less than 7)
+  const displayCount = Math.min(100, scoreHistory.length);
+  const lastEntries = scoreHistory.slice(-displayCount);
+  const lastCumulative = cumulativeScores.slice(-displayCount);
+
+  // Line chart data
   const lineData = {
-    labels: scoreHistory
-      .slice(-7)
-      .map(entry => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    labels: lastEntries.map(entry => 
+      new Date(entry.date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    ),
     datasets: [
       {
-        label: 'Growth Score',
-        data: scoreHistory.slice(-7).map(entry => entry.score),
+        label: 'Cumulative Growth',
+        data: lastCumulative,
         borderColor: 'rgba(59, 130, 246, 1)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
         tension: 0.4,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7,
       },
     ],
   };
 
-  // Calculate tag distribution for pie chart
+  // Calculate max value for y-axis with some padding
+  const maxValue = React.useMemo(() => {
+    if (cumulativeScores.length === 0) return 10;
+    return Math.max(...cumulativeScores) * 1.1;
+  }, [cumulativeScores]);
+
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: (context: any) => {
+            const label = context.dataset.label || '';
+            const value = context.raw;
+            const prevValue = context.datasetIndex === 0 
+              ? context.parsed.y - (scoreHistory[context.dataIndex]?.score || 0)
+              : null;
+            
+            return prevValue !== null 
+              ? [`${label}: ${value}`, `(+${value - prevValue} this time)`]
+              : `${label}: ${value}`;
+          }
+        }
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        min: 0,
+        max: maxValue,
+        ticks: {
+          precision: 0,
+          stepSize: Math.ceil(maxValue / 5),
+        },
+      },
+    },
+    maintainAspectRatio: false,
+  };
+
+  // Pie chart data (tag distribution)
   const tagCounts: Record<GoalTag, number> = goals.reduce((acc, goal) => {
-    goal.tags.forEach(tag => {
+    goal.tags?.forEach(tag => {
       const tagKey = tag as GoalTag;
       acc[tagKey] = (acc[tagKey] || 0) + 1;
     });
@@ -61,40 +126,18 @@ const ProgressChart: React.FC = () => {
       {
         data: Object.values(tagCounts),
         backgroundColor: [
-          'rgba(16, 185, 129, 0.7)',  // primary-500
-          'rgba(59, 130, 246, 0.7)',  // secondary-500
-          'rgba(236, 72, 153, 0.7)',  // accent-500
-          'rgba(249, 115, 22, 0.7)',  // orange-500
-          'rgba(139, 92, 246, 0.7)',  // purple-500
-          'rgba(234, 179, 8, 0.7)',   // yellow-500
-          'rgba(6, 182, 212, 0.7)',   // cyan-500
-          'rgba(156, 163, 175, 0.7)', // gray-400
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(236, 72, 153, 0.7)',
+          'rgba(249, 115, 22, 0.7)',
+          'rgba(139, 92, 246, 0.7)',
+          'rgba(234, 179, 8, 0.7)',
+          'rgba(6, 182, 212, 0.7)',
+          'rgba(156, 163, 175, 0.7)',
         ],
         borderWidth: 1,
       },
     ],
-  };
-
-  const lineOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        mode: 'index' as const,
-        intersect: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0,
-        },
-      },
-    },
-    maintainAspectRatio: false,
   };
 
   const pieOptions = {
@@ -113,16 +156,31 @@ const ProgressChart: React.FC = () => {
     maintainAspectRatio: false,
   };
 
+  // Update chart when data changes
+  React.useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.update();
+    }
+  }, [scoreHistory, goals]);
+
   return (
-    <div>
-      <h4 className="text-sm font-medium text-gray-700 mb-2">Growth Over Time</h4>
-      <div className="h-48 mb-6">
-        <Line data={lineData} options={lineOptions} />
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Growth Over Time</h4>
+        <div className="h-48">
+          <Line 
+            ref={chartRef} 
+            data={lineData} 
+            options={lineOptions} 
+          />
+        </div>
       </div>
       
-      <h4 className="text-sm font-medium text-gray-700 mb-2">Goals by Tag</h4>
-      <div className="h-48">
-        <Pie data={pieData} options={pieOptions} />
+      <div>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Goals by Tag</h4>
+        <div className="h-48">
+          <Pie data={pieData} options={pieOptions} />
+        </div>
       </div>
     </div>
   );
