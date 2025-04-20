@@ -100,10 +100,17 @@ export const saveGoal = (goal: Goal): Goal => {
 };
 
 // Delete a goal
+// Delete a goal
 export const deleteGoal = (id: string): void => {
   const goals = getGoals();
   const filteredGoals = goals.filter(goal => goal.id !== id);
-  localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(filteredGoals));
+  
+  if (filteredGoals.length !== goals.length) {
+    localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(filteredGoals));
+    return;
+  }
+  
+  throw new Error(`Goal with id ${id} not found`);
 };
 
 // Get user profile

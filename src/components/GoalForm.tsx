@@ -140,7 +140,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
           name="name"
           value={goal.name}
           onChange={handleChange}
-          className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           required
         />
       </div>
@@ -176,7 +176,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
           value={goal.notes}
           onChange={handleChange}
           rows={3}
-          className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
       </div>
       
@@ -185,27 +185,67 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
           <label className="block text-sm font-medium text-gray-300 mb-1">
             Start Date
           </label>
-          <input
-            type="date"
-            name="startDate"
-            value={goal.startDate}
-            onChange={handleChange}
-            className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            required
-          />
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              name="startDate"
+              value={goal.startDate}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              required
+            />
+            <div
+              className="absolute inset-y-0 right-0 flex items-center px-3 py-2 cursor-pointer"
+              onClick={() => {
+                const datePicker = document.getElementById('startDatePicker') as HTMLInputElement;
+                if (datePicker) {
+                  datePicker.showPicker();
+                }
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5 4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H5zm3 0h4a1 1 0 011 1v1a1 1 0 01-1 1H8a1 1 0 01-1-1V5a1 1 0 011-1zm5 5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-3a1 1 0 00-1-1h-2zm-4 0a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-3a1 1 0 00-1-1H7zm-2 4a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <input
+              type="date"
+              id="startDatePicker"
+              className="absolute inset-y-0 right-0 px-3 py-2 bg-transparent border-none text-white cursor-pointer opacity-0 z-10"
+              style={{zIndex: 1}}
+              
+
+                onChange={(e) => {
+                  if (e.target instanceof HTMLInputElement) {
+                    setGoal({ ...goal, startDate: e.target.value });
+                  }
+                handleChange(e);
+                if (e.target instanceof HTMLInputElement) {
+                  e.target.blur(); // Close the calendar after selection
+                }
+              }}
+            />
+          </div>
         </div>
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-300 mb-1">
             End Date
           </label>
-          <input
-            type="date"
-            name="endDate"
-            value={goal.endDate}
-            onChange={handleChange}
-            className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            required
-          />
+          <div  className="relative flex items-center">
+            <input type="text" name="endDate" value={goal.endDate} onChange={handleChange} className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required />
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 py-2 cursor-pointer" onClick={() => { const datePicker = document.getElementById('endDatePicker') as HTMLInputElement; if (datePicker) { datePicker.showPicker(); } }}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H5zm3 0h4a1 1 0 011 1v1a1 1 0 01-1 1H8a1 1 0 01-1-1V5a1 1 0 011-1zm5 5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-3a1 1 0 00-1-1h-2zm-4 0a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-3a1 1 0 00-1-1H7zm-2 4a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" /></svg>
+            </div>
+            <input type="date" id="endDatePicker" className="absolute inset-y-0 right-0 px-3 py-2 bg-transparent border-none text-white cursor-pointer opacity-0 z-10" style={{ zIndex: 1 }} onChange={(e) => { if (e.target instanceof HTMLInputElement) { setGoal({ ...goal, endDate: e.target.value }); } handleChange(e); if (e.target instanceof HTMLInputElement) { e.target.blur(); } }} />
+          </div>
         </div>
       </div>
       
@@ -281,7 +321,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
             step="0.5"
             value={goal.timeEstimate}
             onChange={handleNumberChange}
-            className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             required
           />
         </div>
@@ -315,7 +355,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
             name="status"
             value={goal.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-surface border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             required
           >
             <option value="not-started">Not Started</option>
@@ -349,7 +389,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialGoal, onSave, onCancel, onDe
             type="text"
             value={newSubTask}
             onChange={(e) => setNewSubTask(e.target.value)}
-            className="flex-1 px-3 py-2 bg-surface border border-gray-800 rounded-l-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="flex-1 px-3 py-2 bg-[#0d0d0d] border border-gray-800 rounded-l-md text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             placeholder="Add a subtask"
           />
           <button
