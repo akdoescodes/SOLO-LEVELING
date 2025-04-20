@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useGoals } from '../context/GoalContext';
 import { GoalWithCalculations, GoalTag } from '../types/goal';
 import GoalCard from './GoalCard';
-import { PlusCircle, Filter, TrendingUp, Clock, CheckCheck } from 'lucide-react';
+import { PlusCircle, Filter, TrendingUp, Clock, CheckCheck, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProgressChart from './ProgressChart';
 
 type SortOption = 'priority' | 'deadline' | 'effort' | 'progress';
+type TimeframeFilter = 'all' | 'today' | 'tomorrow';
 
 interface DashboardProps {
   onOpenForm: () => void;
@@ -18,6 +19,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenForm, onEditGoal }) => {
   const [selectedTags, setSelectedTags] = useState<GoalTag[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('priority');
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('active');
+  const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>('all');
 
   const handleDeleteGoal = (id: string) => {
     if (window.confirm('Are you sure you want to delete this goal?')) {
@@ -33,12 +35,40 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenForm, onEditGoal }) => {
     }
   };
 
+  // Helper function to check if a date is today
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
+
+  // Helper function to check if a date is tomorrow
+  const isTomorrow = (date: Date): boolean => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return date.getDate() === tomorrow.getDate() &&
+      date.getMonth() === tomorrow.getMonth() &&
+      date.getFullYear() === tomorrow.getFullYear();
+  };
+
   const filteredGoals = goals.filter(goal => {
+    // Status filter (active/completed)
     if (filter === 'completed' && goal.status !== 'completed') return false;
     if (filter === 'active' && goal.status === 'completed') return false;
     
+    // Tags filter
     if (selectedTags.length > 0) {
-      return goal.tags.some(tag => selectedTags.includes(tag as GoalTag));
+      if (!goal.tags.some(tag => selectedTags.includes(tag as GoalTag))) {
+        return false;
+      }
+    }
+    
+    // Timeframe filter
+    if (timeframeFilter !== 'all') {
+      const goalDate = new Date(goal.startDate);
+      if (timeframeFilter === 'today' && !isToday(goalDate)) return false;
+      if (timeframeFilter === 'tomorrow' && !isTomorrow(goalDate)) return false;
     }
     
     return true;
@@ -117,6 +147,43 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenForm, onEditGoal }) => {
                 }`}
               >
                 Completed
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex items-center mr-2">
+                <Calendar size={16} className="text-gray-400 mr-1" />
+                <span className="text-sm font-medium text-gray-400">Timeframe:</span>
+              </div>
+              <button
+                onClick={() => setTimeframeFilter('all')}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  timeframeFilter === 'all'
+                    ? 'border-primary-500 text-primary-400'
+                    : 'border-gray-800 text-gray-400 hover:border-gray-700'
+                }`}
+              >
+                All Dates
+              </button>
+              <button
+                onClick={() => setTimeframeFilter('today')}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  timeframeFilter === 'today'
+                    ? 'border-primary-500 text-primary-400'
+                    : 'border-gray-800 text-gray-400 hover:border-gray-700'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setTimeframeFilter('tomorrow')}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  timeframeFilter === 'tomorrow'
+                    ? 'border-primary-500 text-primary-400'
+                    : 'border-gray-800 text-gray-400 hover:border-gray-700'
+                }`}
+              >
+                Tomorrow
               </button>
             </div>
 
